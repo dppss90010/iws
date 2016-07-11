@@ -26,7 +26,7 @@ public class Main
 		run(m,c);
 	}
 	public static void run(Map m,List<Car> c) {
-		for(;;) {
+		for(;;) { //while(1)
 			c.add(new Car(5,0,1,1,1,1,1,1,m.road.get(3)));
 			for(Car car : c){
 				car.moveCar(m);
@@ -94,7 +94,7 @@ class Car
 	void moveCar(Map m) {
 		System.out.println(xPoint +" "+ yPoint);
 		xPoint += xSpeed;
-		yPoint += ySpeed;
+
 	}
 }
 class Intersection
@@ -117,6 +117,10 @@ class Intersection
 		road.add(r);
 		roadnum = road.size();
 	}
+	@Override
+	public String toString() {
+		return String.format("(%.3f,%.3f) num:%d",x,y,roadnum);
+	}
 }
 class Map
 {
@@ -133,12 +137,12 @@ class Map
 		getIntersect();
 	}
 
-	private void getIntersect() {
+	private void getIntersect() { //analysis map for Intersection
 		int roadnum = road.size();
 		int i = 0 ,j = 0 ,k=0 ,w=0;
 		Road temp,temp2;
-		for(i=0 ; i<roadnum-1 ; i++) {
-			temp = road.get(i);
+		for(i=0 ; i<roadnum-1 ; i++) { //similar bubble sort for comparing two road component from road ArrayList
+			temp = road.get(i); 
 //			System.out.println(temp);
 			for(j=i+1 ; j<roadnum ; j++) {
 				temp2 = road.get(j);
@@ -165,7 +169,7 @@ class Map
 							temp_intersect.addRoad(temp2);
 							intersect.add(temp_intersect); //add intersecion to ArrayList of Map
 						}
-						else {
+						else { //find
 							
 						}
 
@@ -228,7 +232,7 @@ class Map
 		int point_index = 0;
 		List<Float> temp_point ;
 
-		//split file in line 
+		//split file in line by( "\n")
 		String[] line = buf.split("\n");  
 		line_count = 0;
 		for(String a : line) {
@@ -241,33 +245,35 @@ class Map
 		}
 
 		//get each line of need data
-		// split line into string of word (by "(")
+		//split
 		line_count = 0;
 		for(String a : line) {
-			String[] b = a.split("\\("); // split line into string of word (by "(")
+			// split line in word (by "(")
+			String[] b = a.split("\\(");
 			Road r;
 			point_index = 0;
 			temp_point = new ArrayList<Float>(4);
 
-			//split in subword by ","
+			//split
 			for(String c : b) {
+				//split in subword by "," 
 				String[] d = c.split(",");
 
-				int temp2 = 0;
-				for(String f : d){
-					if(line_count == 0) {
+				int temp2 = 0; 
+				for(String f : d){ //loop for get digit
+					if(line_count == 0) {  //first line for map size
 						if( Character.isDigit(f.charAt(0)) && temp2 == 0) {
-							sizeX = Float.parseFloat(f); //ex:10.0,
+							sizeX = Float.parseFloat(f); //ex:10.0
 							temp2 = (temp2 + 1) % 2;
 //							System.out.println(sizeX);
 						}
 						else if ( Character.isDigit(f.charAt(0)) && temp2 == 1) {
-							sizeY = Float.parseFloat( f.substring( 0,f.indexOf(")")) );
+							sizeY = Float.parseFloat( f.substring( 0,f.indexOf(")")) ); //substring for delete ')'
 							temp2 = (temp2 + 1) % 2;
 //							System.out.println(sizeY);
 						}
 					}
-					else{
+					else{ //other line for road
 						if( Character.isDigit(f.charAt(0)) && temp2 == 0) {
 							temp_point.add( Float.parseFloat(f) );
 							temp2 = (temp2 + 1) % 2;
@@ -287,9 +293,9 @@ class Map
 			}
 
 			//add road to map road ArrayList
-			if(line_count != 0) { //not first line ( size of map)
+			if(line_count != 0) { //not first line ( size of map )
 				
-				//last two number of point not be a line
+				//last two number of point not be a straight line
 				for(int i=4 ; i<temp_point.size()-2 ; i=i+2 ){ 
 					r = new Road(temp_point.get(i).floatValue() ,temp_point.get(i+1).floatValue()
 							,temp_point.get(i+2).floatValue() ,temp_point.get(i+3).floatValue());
@@ -303,7 +309,7 @@ class Map
 //		System.out.println("X:"+ sizeX +"Y:"+ sizeY);
 	}
 
-	private int checkLine(String line ,int num) {
+	private int checkLine(String line ,int num) { //check line format
 		int return_num = -1;
 		if(num < 1){
 			return_num = -1; //error line number
@@ -321,7 +327,7 @@ class Map
 				return_num = 1;
 		}
 
-		//check bracket
+		//check bracket '('  ')'  and '<'  '>'
 		int count_bracket = 0;
 		int count_compare_bracket = 0;
 		for(int i=0 ; i < line.length() ; i++) {
@@ -341,8 +347,7 @@ class Map
 //		System.out.println( return_num );
 		return return_num;
 	}
-	private String readFile(){
-		//read file
+	private String readFile(){ //read file
 		String buf = new String();
 		FileReader fin;
 		try {
