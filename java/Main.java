@@ -9,27 +9,43 @@ public class Main
 		Intersection in = new Intersection();
 		List<Car> c = new ArrayList<Car>(1);
 		Map m =new Map();
-//		System.out.println("size X:"+ m.sizeX +"\tY:"+ m.sizeY);
-//		for (Road temp : m.road){
-//			System.out.println(temp);
-//			System.out.println("shape:");
-//			for(Point p:temp.shape)
-//				System.out.print(p);
-//			System.out.println("\n");
-//		}
+		//test for map size
+		System.out.println("size X:"+ m.sizeX +"\tY:"+ m.sizeY);
+
+		//test the road of map
+/*		for (Road temp : m.road){
+			System.out.println(temp);
+			System.out.println("shape:");
+			for(Point p:temp.shape)
+				System.out.print(p);
+			System.out.println("\n");
+		}
+
+		//test the Intersection of map
 		for(Intersection temp2 : m.intersect) {
 			System.out.println("x:"+ temp2.x +" y:"+ temp2.y);
 			for(Road temp : temp2.road) {
 				System.out.println(temp);
 			}
-		}
+		}*/
+
+		//test for map dispear point
+/*		for(Point p : m.disPoint)
+			System.out.println(p);*/
+
+		//go run
 		run(m,c);
 	}
 	public static void run(Map m,List<Car> c) {
-		for(;;) { //while(1)
-			c.add(new Car(5,0,1,1,1,1,1,1,m.road.get(3)));
-			for(Car car : c){
-				car.moveCar(m);
+		c.add(new Car(5,0,1,1,0,1,1,1,m.road.get(3)));
+		while(!c.isEmpty()) { //while(1)
+			for(int i=0 ; i<c.size() ; ){
+				if(c.get(i).moveCar(m)) { //at disapear point
+					c.remove(i);
+//					System.out.println("true" +c.size());
+					continue;
+				}
+				i++;
 			}
 		}
 	}
@@ -53,8 +69,12 @@ class Road
 		endY = endy;
 		shape = new ArrayList<Point>(2);
 	}
-	void addShape(Point p) {
+	public void addShape(Point p) {
 		shape.add(p);
+	}
+	public boolean equal(Road r) { //comapre if two road equal or not
+		return (this.startX == r.startX) && (this.startY == r.startY)
+			&& (this.endX == r.endX) && (this.endY == r.endY) ;
 	}
 	@Override
 	public String toString() {
@@ -91,31 +111,61 @@ class Car
 		road = r;
 	}
 
-	void moveCar(Map m) {
-		System.out.println(xPoint +" "+ yPoint);
+	public boolean moveCar(Map m) {
+		System.out.println("current:("+ xPoint +","+ yPoint +")");
 		xPoint += xSpeed;
-
+		yPoint += ySpeed;
+		Point temp = new Point(xPoint ,yPoint);
+		System.out.println("temp="+ temp);
+		
+		for(Point p : m.disPoint) {
+			System.out.println("p="+p);
+			if(p.equal(temp))
+				return true; //if at disapear point return true
+		}
+//		if(m.disPoint.contains(temp))
+//			return true;
+		return false; //not at disapear point
 	}
 }
+
 class Intersection
 {
 	public float x;
 	public float y;
-	int roadnum;
+	public int roadnum;
+	public double range;
 	public List<Road> road;
 
 	Intersection() {
 		this(0,0,0);
 	}
-	Intersection(float ix,float iy,int rnum) {
+	Intersection(float ix ,float iy ,int rnum) {
+		this(ix ,iy ,rnum ,0.5);
+	}
+	Intersection(float ix ,float iy ,int rnum ,double r) {
 		x = ix;
 		y = iy;
 		roadnum = rnum;
 		road = new ArrayList<Road>(2);
+		range = r;
 	}
-	void addRoad(Road r) {
+
+	public void addRoad(Road r) {
 		road.add(r);
 		roadnum = road.size();
+	}
+	public boolean pointInRange(float ix ,float iy) {
+		return xInRange(ix) && yInRange(iy) ;
+	}
+	public boolean pointInRange(Point p) {
+		return xInRange(p.xPoint) && yInRange(p.yPoint);
+	}
+	public boolean xInRange(float ix) {
+		return (x-range <= ix) && (ix <= x+range);
+	}
+	public boolean yInRange(float iy) {
+		return (y-range <= iy) && (iy <= y+range);
 	}
 	@Override
 	public String toString() {
@@ -126,15 +176,24 @@ class Map
 {
 	public List<Intersection> intersect;
 	public List<Road> road;
+	public List<Point> disPoint;  //car disapear point
 	public float sizeX;
 	public float sizeY;
 
 	Map() {
 		road = new ArrayList<Road>(2);
 		intersect = new ArrayList<Intersection>(2);
+		disPoint = new ArrayList<Point>(2);
 		String buf = readFile();
 		getData(buf);
 		getIntersect();
+		getDisapearPoint();
+	}
+	
+	private void getDisapearPoint() { //get car disapear point
+		for(Road r : road) {
+			disPoint.add(new Point(r.endX ,r.endY));
+		}
 	}
 
 	private void getIntersect() { //analysis map for Intersection
@@ -163,14 +222,29 @@ class Map
 								break;
 							}
 						}
-						if(k == intersect.size()) { //not find
+
+						//determine if new intersection or not
+						if(k == intersect.size()) { //not find 
+							//new intersection
 							Intersection temp_intersect = new Intersection(point.xPoint ,point.yPoint ,2);
 							temp_intersect.addRoad(temp); //add road to intersection
 							temp_intersect.addRoad(temp2);
 							intersect.add(temp_intersect); //add intersecion to ArrayList of Map
 						}
 						else { //find
-							
+							//find point in the intersection ArrayList
+							for(Road temp3 : intersect.get(k).road) {
+								if( temp3.equal(temp) ) {
+									//if temp_road in List add temp2_road to List
+									intersect.get(k).addRoad(temp2);
+									break;
+								}
+								else if( temp3.equal(temp2) ) {
+									//if temp_road2 in List add temp_road to List
+									intersect.get(k).addRoad(temp);
+									break;
+								}
+							}
 						}
 
 					}
@@ -347,11 +421,14 @@ class Map
 //		System.out.println( return_num );
 		return return_num;
 	}
-	private String readFile(){ //read file
+	private String readFile() {
+		return this.readFile("map2.txt");
+	}
+	private String readFile(String filename) { //read file
 		String buf = new String();
 		FileReader fin;
 		try {
-			fin = new FileReader("map2.txt");
+			fin = new FileReader(filename);
 			int word;
 			while ( fin.ready() ) {
 				word = fin.read();
@@ -367,14 +444,21 @@ class Map
 }
 class Point 
 {
-	public float xPoint;
-	public float yPoint;
+	public float xPoint; //x-axis of Point 
+	public float yPoint; //y-axis of Point
 	Point() {
 		this(0,0);
+	}
+	Point(Point p) {
+		this(p.xPoint ,p.yPoint);
 	}
 	Point(float x,float y) {
 		xPoint = x;
 		yPoint = y;
+	}
+
+	public boolean equal(Point p) { //compare two Point is equal or not
+		return (xPoint == p.xPoint) && (yPoint == p.yPoint);
 	}
 	@Override
 	public String toString(){
