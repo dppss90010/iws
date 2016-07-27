@@ -47,6 +47,7 @@ public class Main
 				}
 				i++;
 			}
+//			c.add(new Car(5,0,1,1,0,1,1,1,m.road.get(3)));
 		}
 	}
 }
@@ -113,13 +114,15 @@ class Car
 
 	public boolean moveCar(Map m) {
 		System.out.println("current:("+ xPoint +","+ yPoint +")");
+		for(float i=0 ; i<xSpeed ; i++) {
+		}
 		xPoint += xSpeed;
 		yPoint += ySpeed;
 		Point temp = new Point(xPoint ,yPoint);
-		System.out.println("temp="+ temp);
-		
+		System.out.println("new location="+ temp);
+
 		for(Point p : m.disPoint) {
-			System.out.println("p="+p);
+			System.out.println("disapear point:"+p);
 			if(p.equal(temp))
 				return true; //if at disapear point return true
 		}
@@ -151,20 +154,20 @@ class Intersection
 		range = r;
 	}
 
-	public void addRoad(Road r) {
+	public void addRoad(Road r) { //add road to Intersection (road ArrayList)
 		road.add(r);
-		roadnum = road.size();
+		roadnum = road.size(); //update road number 
 	}
-	public boolean pointInRange(float ix ,float iy) {
+	public boolean pointInRange(float ix ,float iy) { //if point in the Intersection range
 		return xInRange(ix) && yInRange(iy) ;
 	}
 	public boolean pointInRange(Point p) {
-		return xInRange(p.xPoint) && yInRange(p.yPoint);
+		return xInRange(p.xPoint) && yInRange(p.yPoint); 
 	}
-	public boolean xInRange(float ix) {
+	public boolean xInRange(float ix) { //if the X-axis of point in the Intersection range
 		return (x-range <= ix) && (ix <= x+range);
 	}
-	public boolean yInRange(float iy) {
+	public boolean yInRange(float iy) { //if the Y-axis of point in the Intersection range
 		return (y-range <= iy) && (iy <= y+range);
 	}
 	@Override
@@ -192,7 +195,9 @@ class Map
 	
 	private void getDisapearPoint() { //get car disapear point
 		for(Road r : road) {
-			disPoint.add(new Point(r.endX ,r.endY));
+			if( (r.endX == sizeX) || (r.endY == sizeY)
+				|| (r.endX == 0) || (r.endY == 0 ) )  //if at boundary and add to disPoint
+				disPoint.add(new Point(r.endX ,r.endY));
 		}
 	}
 
