@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset= "UTF-8">
+<!--
+<meta http-equiv="refresh" content="5" />
+-->
+<title>Map</title>
+<style type="text/css">
+	html { height: 100% }
+	body { height: 100%; margin: 0; padding: 0 }
+	#googleMap { height: 100% }
+</style>
+<script
+src="http://maps.googleapis.com/maps/api/js?key=AIzaSyCvhBTXKK0WFs5FjXsqyktRSs0ijZyxjUU&libraries=places">
+</script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script> 
+<script>
+	function readTextFile(file)
+	{
+		var rawFile = new XMLHttpRequest();
+		rawFile.open("GET", file, false);
+		rawFile.onreadystatechange = function ()
+		{
+			if(rawFile.readyState === 4)
+			{
+				if(rawFile.status === 200 || rawFile.status == 0)
+				{
+					var splitResponse = rawFile.responseText.split( "\n" );
+					for(index = 0; index < splitResponse.length-1; index++) //EOF 
+					{
+						//document.write(splitResponse[index]+"<br>");
+						//document.write(rawFile.responseText);
+						//window.open(splitResponse[index]);
+					} 
+
+
+				}
+			}
+		}
+		rawFile.send(null);
+		return rawFile.responseText;
+	}
+	function getData(text)
+	{
+		var data = new Array();
+		var line = text.split( "\n" ); 
+		for(index = 0; index < line.length-1; index++) {
+			var split_line = line[index].split(",");
+			data[index] = new Array();
+			data[index][0] =  split_line[0];//speed
+			data[index][1] =  split_line[1];//23
+			data[index][2] =  split_line[2];//120
+			data[index][3] =  parseInt(split_line[3]);//time
+			data[index][4] =  split_line[4];//mac
+		}
+
+
+		return data;
+	}
+
+
+
+var myCenter = new google.maps.LatLng(23.551110,120.4774700);
+var stavanger= new google.maps.LatLng(23.549359,120.476444);
+var amsterdam= new google.maps.LatLng(23.549214,120.476765);
+var london   = new google.maps.LatLng(23.549096,120.477131);
+var map;
+
+function initialize() {
+	var data = getData(readTextFile("./data.txt"));
+//	alert(readTextFile("./map.txt"));
+	var mapDiv = document.getElementById('googleMap');
+
+	myCenter = new google.maps.LatLng("23.5549316","120.4716952"); //size center
+	var mapProp = {
+		center:myCenter,
+		zoom:17,
+		panControl:true,
+		zoomControl:true,
+		mapTypeControl:true,
+		scaleControl:true,
+		streetViewControl:true,
+		overviewMapControl:true,
+		rotateControl:true,
+		mapTypeControlOptions: {
+			style:google.maps.MapTypeControlStyle.DROPDOWN_MENU
+		},
+		mapTypeId:google.maps.MapTypeId.ROADMAP
+	};
+//	var map=new google.maps.Map(document.getElementById("googleMap"), mapProp);
+	map=new google.maps.Map(mapDiv, mapProp);
+//	map=new google.maps.Map(document.getElementById('googleMap'), mapProp);
+
+	// Create a DIV to hold the control and call HomeControl()
+	var homeControlDiv = document.createElement('div');
+	var homeControl = new HomeControl(homeControlDiv, map);
+	//  homeControlDiv.index = 1;
+	map.controls[google.maps.ControlPosition.TOP_RIGHT].push(homeControlDiv); 
+
+/*	var marker=new google.maps.Marker({
+		position:myCenter,
+		title:'Click to zoom',
+		map: map,
+		draggable:true,
+//		animation:google.maps.Animation.BOUNCE
+		});
+
+//	marker.setMap(map);
+
+	var infowindow = new google.maps.InfoWindow({
+		content: 'Latitude: ' +data[0]+ '<br>Longitude: '+data[1]
+		});
+	infowindow.open(map,marker);
+*/
+	for(i=0 ; i<data.length ; i++){
+		var d = new Date();
+		var n = d.getTime();
+		if(n-data[i][3]<10000){
+//		if(true){
+			var marker2=new google.maps.Marker({
+				position:new google.maps.LatLng(data[i][1],+data[i][2]),
+				title:'Click to zoom',
+				map: map,
+			});
+			var infowindow = new google.maps.InfoWindow({
+				//content:data[i][0][0]
+					content: 'Speed: '+data[i][0] +
+					 '<br>Latitude: ' +data[i][1] + 
+					 '<br>Longitude: '+data[i][2] +
+					 '<br>: '+(n-data[i][3])+
+					 '<br>Mac: '      +data[i][4] 
+				});
+//			infowindow.open(map,marker2);
+		}
+	}
+
+}
+
+function HomeControl(controlDiv, map) {
+	controlDiv.style.padding = '5px';
+	var controlUI = document.createElement('div');
+	controlUI.style.backgroundColor = '#FFFFFF';
+	controlUI.style.border='1px solid';
+	controlUI.style.cursor = 'pointer';
+	controlUI.style.textAlign = 'center';
+	controlUI.title = 'Set map to London';
+	controlDiv.appendChild(controlUI);
+	var controlText = document.createElement('div');
+	controlText.style.fontFamily='Arial,sans-serif';
+	controlText.style.fontSize='12px';
+	controlText.style.paddingLeft = '4px';
+	controlText.style.paddingRight = '4px';
+	controlText.innerHTML = '<b>Home<b>'
+	controlUI.appendChild(controlText);
+
+	// Setup click-event listener: simply set the map to London
+	google.maps.event.addDomListener(controlUI, 'click', function() {
+		map.setCenter(myCenter)
+	});
+}
+
+function loadScript()
+{
+  var script = document.createElement("script");
+  script.type = "text/javascript";
+  script.src = "http://maps.googleapis.com/maps/api/js?key=AIzaSyCvhBTXKK0WFs5FjXsqyktRSs0ijZyxjUU&sensor=false&callback=initialize";
+  document.body.appendChild(script);
+}
+
+
+google.maps.event.addDomListener(window, 'load', initialize);
+//window.onload = loadScript;
+//google.maps.event.addListener(map, 'click', function (event) {
+//								geocodePosition(geocoder, event.latLng, cityCircle, marker);
+//								});
+
+//<![CDATA[
+$(document).ready(function(){
+	show();
+	function show(){ 
+		//google.maps.event.addDomListener(window, 'load', initialize);
+		initialize();
+//		alert("Hello! I am an alert box!!");
+	//	$("#hello").html(lol);
+	//	});
+		setTimeout(function(){show()},2000); 
+	}
+
+});
+//]]>
+
+</script>
+</head>
+<body>
+<!--
+<div id="googleMap" style="width:1000px;height:490px;"></div>
+<div id="googleMap" style="width: 100%; height: 100%;"></div>
+-->
+<div id="googleMap" ></div>
+
+</body>
+</html>
+
+
